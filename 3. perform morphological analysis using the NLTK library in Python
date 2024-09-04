@@ -1,0 +1,17 @@
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+text = "The cats are playing with the balls. They played joyfully."
+tokens = word_tokenize(text)
+print("Tokens:", tokens)
+stemmer = PorterStemmer()
+stems = [stemmer.stem(token) for token in tokens]
+print("Stems:", stems)
+lemmatizer = WordNetLemmatizer()
+lemmas = [lemmatizer.lemmatize(token) for token in tokens]
+print("Lemmas:", lemmas)
+lemmas_with_pos = [lemmatizer.lemmatize(token, pos='v') for token in tokens]
+print("Lemmas with POS:", lemmas_with_pos)
