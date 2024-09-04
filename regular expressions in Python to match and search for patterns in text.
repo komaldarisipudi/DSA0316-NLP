@@ -1,0 +1,17 @@
+import re
+text = "The rain in Spain falls mainly in the plain."
+pattern = r"ain"
+matches = re.findall(pattern, text)
+print("Matches found:", matches)
+search_result = re.search(pattern, text)
+if search_result:
+    print("First match found at position:", search_result.start())
+else:
+    print("No match found")
+match_result = re.match(r"The", text)
+if match_result:
+    print("Pattern matched at the start of the string.")
+else:
+    print("Pattern not matched at the start of the string.")
+new_text = re.sub(pattern, "###", text)
+print("Text after substitution:", new_text)
