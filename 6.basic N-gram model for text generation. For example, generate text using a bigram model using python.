@@ -1,0 +1,31 @@
+import random
+import re
+from collections import defaultdict
+def preprocess_text(text):
+    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Keep only letters and spaces
+    tokens = text.lower().split()  # Convert to lowercase and split into words
+    return tokens
+def build_bigram_model(tokens):
+    bigrams = defaultdict(list)
+    for i in range(len(tokens) - 1):
+        bigrams[tokens[i]].append(tokens[i + 1])
+    return bigrams
+def generate_text(bigram_model, start_word, num_words=20):
+    current_word = start_word
+    result = [current_word]
+    for _ in range(num_words - 1):
+        next_word_choices = bigram_model.get(current_word, None)
+        if not next_word_choices:
+            break  
+        next_word = random.choice(next_word_choices)
+        result.append(next_word)
+        current_word = next_word    
+    return ' '.join(result)
+text = """
+The sun rises in the east and sets in the west. The sky is blue, and the clouds are white. The birds sing in the morning, and the breeze is cool.
+"""
+tokens = preprocess_text(text)
+bigram_model = build_bigram_model(tokens)
+start_word = random.choice(tokens)
+generated_text = generate_text(bigram_model, start_word, num_words=20)
+print("Generated text:\n", generated_text)
