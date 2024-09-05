@@ -1,0 +1,64 @@
+import nltk
+from nltk.corpus import treebank
+from collections import defaultdict, Counter
+import numpy as np
+nltk.download('treebank')
+nltk.download('universal_tagset')
+tagged_sentences = nltk.corpus.treebank.tagged_sents(tagset='universal')  
+def train_hmm(tagged_sentences
+    transition_counts = defaultdict(Counter)
+    emission_counts = defaultdict(Counter)
+    tag_counts = Counter()
+    for sentence in tagged_sentences:
+        previous_tag = '<s>'  # Sentence start
+        tag_counts[previous_tag] += 1
+        for word, tag in sentence:
+            transition_counts[previous_tag][tag] += 1
+            emission_counts[tag][word.lower()] += 1
+            tag_counts[tag] += 1
+            previous_tag = tag
+        transition_counts[previous_tag]['</s>'] += 1
+    transition_probs = {tag: {next_tag: count / sum(next_tags.values()) 
+                              for next_tag, count in next_tags.items()} 
+                        for tag, next_tags in transition_counts.items()}
+    emission_probs = {tag: {word: count / tag_counts[tag] 
+                            for word, count in words.items()} 
+                      for tag, words in emission_counts.items()}
+    return transition_probs, emission_probs, tag_counts
+def viterbi_algorithm(sentence, transition_probs, emission_probs, tag_counts):
+    states = list(tag_counts.keys())
+    V = [{}]  
+    path = {}  
+    for tag in states:
+        if tag in emission_probs: 
+            V[0][tag] = transition_probs.get('<s>', {}).get(tag, 0) * emission_probs[tag].get(sentence[0].lower(), 0)
+            path[tag] = [tag]
+    for t in range(1, len(sentence)):
+        V.append({})
+        new_path = {}
+        for tag in states:
+            if tag not in emission_probs:
+                continue
+            candidates = [
+                (V[t-1].get(prev_tag, 0) * transition_probs.get(prev_tag, {}).get(tag, 0) * emission_probs[tag].get(sentence[t].lower(), 0), prev_tag)
+                for prev_tag in states if V[t-1].get(prev_tag, 0) > 0
+            ]
+            if not candidates:
+                continue
+            (prob, best_prev_tag) = max(candidates)
+            V[t][tag] = prob
+            new_path[tag] = path[best_prev_tag] + [tag]
+        if not new_path:  # No valid path, stop early
+            break
+        path = new_path
+    if V[-1]:
+        (prob, best_final_tag) = max((V[len(sentence) - 1][tag], tag) for tag in states if V[len(sentence) - 1].get(tag, 0) > 0)
+        return path[best_final_tag]
+    else:
+        return ['UNKNOWN' for _ in sentence]  # Fallback if no valid path is found
+def pos_tag(sentence, transition_probs, emission_probs, tag_counts):
+    return viterbi_algorithm(sentence, transition_probs, emission_probs, tag_counts)
+transition_probs, emission_probs, tag_counts = train_hmm(tagged_sentences)
+sentence = ["The", "dog", "barks", "loudly"]
+tags = pos_tag(sentence, transition_probs, emission_probs, tag_counts)
+print(list(zip(sentence, tags)))
