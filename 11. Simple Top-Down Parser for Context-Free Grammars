@@ -1,0 +1,25 @@
+grammar = {
+    'S': [['NP', 'VP']],
+    'NP': [['Det', 'N']],
+    'VP': [['V', 'NP']],
+    'Det': [['the']],
+    'N': [['cat'], ['dog']],
+    'V': [['chased'], ['saw']]
+}
+tokens = ['the', 'cat', 'chased', 'the', 'dog']  # input sentence
+def parse(tokens, rule):
+    if len(tokens) == 0:
+        return len(rule) == 0
+    if len(rule) == 0:
+        return False
+    first_rule = rule[0]
+    if first_rule in grammar:  # Non-terminal
+        for production in grammar[first_rule]:
+            if parse(tokens, production + rule[1:]):
+                return True
+    else:  
+        if tokens[0] == first_rule:
+            return parse(tokens[1:], rule[1:])
+    return False
+result = parse(tokens, grammar['S'][0])
+print("Parse successful:", result)
