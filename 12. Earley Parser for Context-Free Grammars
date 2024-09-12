@@ -1,0 +1,50 @@
+class EarleyParser:
+    def __init__(self, grammar, sentence):
+        self.grammar = grammar
+        self.sentence = sentence
+        self.chart = [[] for _ in range(len(sentence) + 1)]
+        self.chart[0].append(('S', [], grammar['S'][0], 0))  # Start rule
+    def predictor(self, state, i):
+        lhs, completed, remaining, origin = state
+        if len(remaining) > 0:
+            next_symbol = remaining[0]
+            if next_symbol in self.grammar:
+                for production in self.grammar[next_symbol]:
+                    self.chart[i].append((next_symbol, [], production, i))
+    def scanner(self, state, i):
+        lhs, completed, remaining, origin = state
+        if len(remaining) > 0:
+            next_symbol = remaining[0]
+            if next_symbol == self.sentence[i]:
+                self.chart[i + 1].append((lhs, completed + [next_symbol], remaining[1:], origin))
+    def completer(self, state, i):
+        lhs, completed, remaining, origin = state
+        if len(remaining) == 0:
+            for st in self.chart[origin]:
+                st_lhs, st_completed, st_remaining, st_origin = st
+                if len(st_remaining) > 0 and st_remaining[0] == lhs:
+                    self.chart[i].append((st_lhs, st_completed + [lhs], st_remaining[1:], st_origin))
+    def parse(self):
+        for i in range(len(self.sentence) + 1):
+            for state in self.chart[i]:
+                if len(state[2]) > 0:
+                    if state[2][0] in self.grammar:
+                        self.predictor(state, i)
+                    else:
+                        if i < len(self.sentence):
+                            self.scanner(state, i)
+                else:
+                    self.completer(state, i)
+        return any(state[0] == 'S' and len(state[2]) == 0 for state in self.chart[-1])
+grammar = {
+    'S': [['NP', 'VP']],
+    'NP': [['Det', 'N']],
+    'VP': [['V', 'NP']],
+    'Det': [['the']],
+    'N': [['cat'], ['dog']],
+    'V': [['chased'], ['saw']]
+}
+sentence = ['the', 'cat', 'chased', 'the', 'dog']
+parser = EarleyParser(grammar, sentence)
+parser.parse()
+print(parser.chart)
